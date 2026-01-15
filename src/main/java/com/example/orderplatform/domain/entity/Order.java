@@ -64,4 +64,24 @@ public class Order {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+    public void changeStatus(OrderStatus newStatus) {
+        if (!isValidTransition(this.status, newStatus)) {
+            throw new IllegalStateException(
+                    "Invalid order status transition from " + this.status + " to " + newStatus
+            );
+        }
+        this.status = newStatus;
+        this.updatedAt = LocalDateTime.now();
+    }
+    private boolean isValidTransition(OrderStatus current, OrderStatus next) {
+        return switch (current) {
+            case CREATED ->
+                    next == OrderStatus.PAYMENT_PENDING || next == OrderStatus.CANCELLED;
+            case PAYMENT_PENDING ->
+                    next == OrderStatus.PAID || next == OrderStatus.FAILED;
+            default -> false;
+        };
+    }
+
+
 }

@@ -1,4 +1,4 @@
-package com.example.order_platform;
+package com.example.orderplatform;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
