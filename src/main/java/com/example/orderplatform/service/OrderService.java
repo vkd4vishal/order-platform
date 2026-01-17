@@ -2,6 +2,7 @@ package com.example.orderplatform.service;
 
 import com.example.orderplatform.domain.entity.Order;
 import com.example.orderplatform.domain.enums.OrderStatus;
+import com.example.orderplatform.domain.event.OrderCreatedEvent;
 import com.example.orderplatform.dto.OrderResponse;
 import com.example.orderplatform.exception.OrderNotFoundException;
 import com.example.orderplatform.repository.OrderRepository;
@@ -12,22 +13,32 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import org.springframework.context.ApplicationEventPublisher;
 
 
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public OrderService(OrderRepository orderRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        ApplicationEventPublisher applicationEventPublisher) {
         this.orderRepository = orderRepository;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
-
     @Transactional
     public OrderResponse createOrder(Long userId, BigDecimal amount) {
         Order order = new Order(userId, amount, OrderStatus.CREATED);
-        return mapToResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+
+        applicationEventPublisher.publishEvent(
+                new OrderCreatedEvent(saved.getId())
+        );
+
+        return mapToResponse(saved);
     }
+
 
     public OrderResponse getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId)
